@@ -1,156 +1,125 @@
-/*use std::fs::{metadata, File, OpenOptions};
-use std::io::{copy, prelude::*};
-use std::path::Path;
-use std::str::FromStr;
+use std::fs::{try_exists, File, OpenOptions};
+use std::io::{prelude::*, Read};
 
 use anyhow::{Context, Ok, Result};
-use tokio::fs::{create_dir, remove_dir_all, remove_file};
+use sha2::{Digest, Sha256};
 
-pub async fn get_content() -> Result<(), anyhow::Error> {
-    if let Err(_e) = File::create_new("filename.txt") {
-        remove_file("filename.txt")
-            .await
-            .context("remove file...")?;
-        File::create_new("filename.txt").context("failed to create file")?;
-    }
-
-    let mut path_str = String::from_str("./")?;
-    path_str.push_str("filename.txt");
-    let path = Path::new(&path_str);
-
-    let mut file = OpenOptions::new()
-        .write(true)
-        .append(true)
-        .open(path)
-        .unwrap();
-
-    let response = reqwest::get("https://opendata.dwd.de/weather/maritime/forecast/german/")
-        .await
-        .context("get response...")?
-        .text()
-        .await
-        .context("get text from response")?;
-
-    for line in response.lines() {
-        if line.contains("LATEST") {
-            if line.contains("COR") {
-                continue;
-            }
-
-            let chars = line.chars();
-            let prefix = chars.into_iter().take(29).collect::<String>();
-            let suffix = &line[47..];
-
-            let filename = line
-                .strip_prefix(&prefix)
-                .expect("could not strip prefix")
-                .strip_suffix(suffix)
-                .expect("could not strip suffix");
-
-            file.write_all(filename.as_bytes())
-                .context("could not write bytes to file")?;
-            file.write_all(b"\n")
-                .context("could not write bytes to file")?;
-        }
-    }
-
-    let mut forecasts = String::new();
-    File::open(path)
-        .context("could not open file")?
-        .read_to_string(&mut forecasts)
-        .context("could not read file contents to string")?;
-
-    if let Err(_e) = create_dir("./content").await {
-        remove_dir_all("./content")
-            .await
-            .context("could not remove dir")?;
-        create_dir("./content")
-            .await
-            .context("could not create dir")?;
-    }
-
-    for forecast in forecasts.lines() {
-        let mut url =
-            String::from_str("https://opendata.dwd.de/weather/maritime/forecast/german/")?;
-        url.push_str(forecast);
-
-        let content = reqwest::get(url)
-            .await
-            .context("get response...")?
-            .text()
-            .await
-            .context("get text from response")?;
-
-        let mut filename_str = String::from_str("./content/")?;
-        filename_str.push_str(forecast);
-
-        let mut filename = File::create_new(filename_str).context("could not create file")?;
-        filename
-            .write_all(content.as_bytes())
-            .context("could not write bytes to files")?;
-    }
-
-    Ok(())
-}*/
-
-use std::fs::{metadata, read_to_string, try_exists, File, OpenOptions};
-use std::io::{copy, prelude::*};
-use std::path::Path;
-use std::str::FromStr;
-
-use anyhow::{Context, Ok, Result};
-use reqwest::Client;
-use tokio::fs::{create_dir, remove_dir_all, remove_file};
-
-/// Die URLs zu den Seewetterberichten hardgecodet als Konstanten
 /// Source: https://www.dwd.de/DE/leistungen/opendata/neuigkeiten/opendata_dez2020_01.html.
 /// 7. LATEST-Dateien für Seewetterberichte verfügbar
 const SEEWETTERBERICHT_NORD_OSTSEE: &str =
     "https://opendata.dwd.de/weather/maritime/forecast/german/FQEN50_EDZW_LATEST";
 
-const DATE_FILE_PATH: &str = "date.txt";
+const FORECAST: &str = "forecast.txt";
+const HASH: &str = "hash.txt";
 
 // TODO: Error handling
 pub async fn get_content() -> Result<(), anyhow::Error> {
-    println!("get_content");
+    let is_modified = is_content_modified()
+        .await
+        .context("could not check if file contents changed AAA")?;
+
+    dbg!(is_modified);
+
+    if is_modified {
+        let mut file = OpenOptions::new()
+            .write(true)
+            .truncate(true)
+            .open(FORECAST)
+            .context("could not open file")?;
+
+        let response = reqwest::get(SEEWETTERBERICHT_NORD_OSTSEE)
+            .await
+            .context("could not fetch data from remote location")?
+            .text()
+            .await
+            .context("could not get text from response")?;
+
+        file.write_all(response.as_bytes())
+            .context("could not write bytes to file 1")?;
+
+        //dbg!(response);
+    } else {
+        println!("content has already been posted");
+    }
 
     Ok(())
 }
 
 async fn is_content_modified() -> Result<bool, anyhow::Error> {
-    let client = Client::new();
-
-    let response = client
-        .get(SEEWETTERBERICHT_NORD_OSTSEE)
-        .send()
+    let response = reqwest::get(SEEWETTERBERICHT_NORD_OSTSEE)
         .await
-        .context("could not fetch data from remote location")?;
+        .context("could not fetch data from remote location")?
+        .text()
+        .await
+        .context("could not get text from response")?;
 
-    let last_modified_new = response
-        .headers()
-        .get("last-modified")
-        .unwrap()
-        .to_str()
-        .context("could not convert last-modified value to string")?;
-
-    if !try_exists(DATE_FILE_PATH).context("file does not exist")? {
-        File::create_new(DATE_FILE_PATH).context("could not create file")?;
-    }
-    let last_modified_old =
-        read_to_string(DATE_FILE_PATH).context("could not read file contents to string")?;
-
-    if last_modified_new == last_modified_old {
-        return Ok(false);
+    if !try_exists(FORECAST).context("file does not exist")? {
+        File::create_new(FORECAST).context("could not create file")?;
     }
 
-    let mut file = OpenOptions::new()
+    let mut file_forecast = OpenOptions::new()
         .write(true)
         .truncate(true)
-        .open(DATE_FILE_PATH)
-        .context("could not create OpenOptions instance")?;
+        .open(FORECAST)
+        .context("could not create OpenOptions instance 1")?;
 
-    file.write_all(last_modified_new.as_bytes())
+    file_forecast
+        .write_all(response.as_bytes())
         .context("could not write bytes to file")?;
 
-    Ok(true)
+    let hash_new =
+        compute_sha256_hash_of_file(FORECAST).context("could not get hash from file contents")?;
+    let mut hash_old = String::new();
+
+    if !try_exists(HASH).context("file does not exsit")? {
+        File::create_new(HASH).context("could not create file")?;
+    } else {
+        let mut file_hash = OpenOptions::new()
+            .read(true)
+            .open(HASH)
+            .context("could not create OpenOptions instance 2")?;
+
+        file_hash
+            .read_to_string(&mut hash_old)
+            .context("could not get hash from file")?;
+    }
+
+    let mut is_content_modified = false;
+    if hash_new != hash_old {
+        is_content_modified = true;
+    }
+
+    let mut file_hash = OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .open(HASH)
+        .context("could not create OpenOptions instance 3")?;
+
+    file_hash
+        .write_all(hash_new.as_bytes())
+        .context("could not write bytes to file")?;
+
+    Ok(is_content_modified)
+}
+
+// Source: https://www.thorsten-hans.com/weekly-rust-trivia-compute-a-sha256-hash-of-a-file/
+#[allow(unused)]
+pub fn compute_sha256_hash_of_file(file: &str) -> Result<String, anyhow::Error> {
+    let mut file = File::open(file).context("could not open file")?;
+
+    let mut hasher = Sha256::new();
+
+    // Read the file in 4KB chunks and feed them to the hasher
+    let mut buffer = [0; 4096];
+    loop {
+        let bytes_read = file
+            .read(&mut buffer)
+            .context("could not read bytes from buffer")?;
+        if bytes_read == 0 {
+            break;
+        }
+        hasher.update(&buffer[..bytes_read]);
+    }
+
+    Ok(format!("{:x}", hasher.finalize()))
 }
