@@ -12,13 +12,10 @@ const SEEWETTERBERICHT_NORD_OSTSEE: &str =
 const FORECAST: &str = "forecast.txt";
 const HASH: &str = "hash.txt";
 
-// TODO: Error handling
 pub async fn get_content() -> Result<(), anyhow::Error> {
     let is_modified = is_content_modified()
         .await
-        .context("could not check if file contents changed AAA")?;
-
-    dbg!(is_modified);
+        .context("could not check if file contents changed")?;
 
     if is_modified {
         let mut file = OpenOptions::new()
@@ -35,9 +32,7 @@ pub async fn get_content() -> Result<(), anyhow::Error> {
             .context("could not get text from response")?;
 
         file.write_all(response.as_bytes())
-            .context("could not write bytes to file 1")?;
-
-        //dbg!(response);
+            .context("could not write bytes to file")?;
     } else {
         println!("content has already been posted");
     }
@@ -61,7 +56,7 @@ async fn is_content_modified() -> Result<bool, anyhow::Error> {
         .write(true)
         .truncate(true)
         .open(FORECAST)
-        .context("could not create OpenOptions instance 1")?;
+        .context("could not create OpenOptions instance")?;
 
     file_forecast
         .write_all(response.as_bytes())
@@ -71,13 +66,13 @@ async fn is_content_modified() -> Result<bool, anyhow::Error> {
         compute_sha256_hash_of_file(FORECAST).context("could not get hash from file contents")?;
     let mut hash_old = String::new();
 
-    if !try_exists(HASH).context("file does not exsit")? {
+    if !try_exists(HASH).context("file does not exist")? {
         File::create_new(HASH).context("could not create file")?;
     } else {
         let mut file_hash = OpenOptions::new()
             .read(true)
             .open(HASH)
-            .context("could not create OpenOptions instance 2")?;
+            .context("could not create OpenOptions instance")?;
 
         file_hash
             .read_to_string(&mut hash_old)
@@ -93,7 +88,7 @@ async fn is_content_modified() -> Result<bool, anyhow::Error> {
         .write(true)
         .truncate(true)
         .open(HASH)
-        .context("could not create OpenOptions instance 3")?;
+        .context("could not create OpenOptions instance")?;
 
     file_hash
         .write_all(hash_new.as_bytes())
@@ -103,8 +98,7 @@ async fn is_content_modified() -> Result<bool, anyhow::Error> {
 }
 
 // Source: https://www.thorsten-hans.com/weekly-rust-trivia-compute-a-sha256-hash-of-a-file/
-#[allow(unused)]
-pub fn compute_sha256_hash_of_file(file: &str) -> Result<String, anyhow::Error> {
+fn compute_sha256_hash_of_file(file: &str) -> Result<String, anyhow::Error> {
     let mut file = File::open(file).context("could not open file")?;
 
     let mut hasher = Sha256::new();
