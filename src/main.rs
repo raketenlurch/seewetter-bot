@@ -4,7 +4,6 @@
 use crate::content::get_content;
 
 mod content;
-mod parser;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
