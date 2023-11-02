@@ -151,9 +151,7 @@ impl HighWindWarningGermanNorthSeaCoast {
     }
 }
 
-#[allow(unused)]
 impl HighWindWarningGermanBalticCoast {
-    #[allow(unused)]
     pub fn new() -> Self {
         Self {
             number: String::new(),
@@ -161,6 +159,121 @@ impl HighWindWarningGermanBalticCoast {
             flensburg_to_fehmarn: String::new(),
             east_of_fehmarn_to_ruegen: String::new(),
             east_from_ruegen: String::new(),
+        }
+    }
+
+    fn get_number(text: &str) -> IResult<&str, &str> {
+        take_until("Amtliche")(text)
+    }
+
+    fn get_title(text: &str) -> IResult<&str, &str> {
+        take_until("Flensburg")(text)
+    }
+
+    fn get_flensburg_to_fehmarn(text: &str) -> IResult<&str, &str> {
+        take_until("oestlich Fehmarn")(text)
+    }
+
+    fn get_oestlich_fehmarn_to_ruegen(text: &str) -> IResult<&str, &str> {
+        take_until("oestlich Ruegen")(text)
+    }
+
+    fn get_oestlich_ruegen(text: &str) -> IResult<&str, &str> {
+        take_until(".")(text)
+    }
+
+    /*fn parse(filename: &str) -> Self {
+        let number_with_newline = Self::get_number(filename).unwrap();
+        let mut number = number_with_newline.1.replace("\n", " ");
+        if number.ends_with(" ") {
+            number = number.trim().to_string();
+        }
+
+        let title_with_newline = Self::get_title(number_with_newline.0).unwrap();
+        let mut title = title_with_newline.1.replace("\n", " ");
+        if title.ends_with(" ") {
+            title = title.trim().to_string();
+        }
+
+        let flensburg_to_fehmarn_with_newline =
+            Self::get_flensburg_to_fehmarn(title_with_newline.0).unwrap();
+        let mut flensburg_to_fehmarn = flensburg_to_fehmarn_with_newline.1.replace("\n", " ");
+        if flensburg_to_fehmarn.ends_with(" ") {
+            flensburg_to_fehmarn = flensburg_to_fehmarn.trim().to_string();
+        }
+
+        let east_of_fehmarn_to_ruegen_with_newline =
+            Self::get_oestlich_fehmarn_to_ruegen(flensburg_to_fehmarn_with_newline.0).unwrap();
+        let mut oestlich_fehmarn_to_ruegen =
+            east_of_fehmarn_to_ruegen_with_newline.1.replace("\n", " ");
+        if oestlich_fehmarn_to_ruegen.ends_with(" ") {
+            oestlich_fehmarn_to_ruegen = oestlich_fehmarn_to_ruegen.trim().to_string();
+        }
+
+        let east_from_ruegen =
+            Self::get_oestlich_ruegen(east_of_fehmarn_to_ruegen_with_newline.0).unwrap();
+        let mut oestlich_ruegen = east_of_fehmarn_to_ruegen_with_newline.1.replace("\n", " ");
+        if oestlich_ruegen.ends_with(" ") {
+            oestlich_ruegen = oestlich_ruegen.trim().to_string();
+        }
+
+        Self {
+            number,
+            title,
+            flensburg_to_fehmarn,
+            // TODO: rename and use shorthand notation
+            east_of_fehmarn_to_ruegen: oestlich_fehmarn_to_ruegen,
+            east_from_ruegen: oestlich_ruegen,
+        }
+    }*/
+
+    fn parse(filename: &str) -> Self {
+        let number_with_newline = Self::get_number(filename).unwrap();
+        let mut number = number_with_newline.1.replace("\r", "").replace("\n", " ");
+        if number.ends_with(" ") {
+            number = number.trim().to_string();
+        }
+
+        let title_with_newline = Self::get_title(number_with_newline.0).unwrap();
+        let mut title = title_with_newline.1.replace("\r", "").replace("\n", " ");
+        if title.ends_with(" ") {
+            title = title.trim().to_string();
+        }
+
+        let flensburg_to_fehmarn_with_newline =
+            Self::get_flensburg_to_fehmarn(title_with_newline.0).unwrap();
+        let mut flensburg_to_fehmarn = flensburg_to_fehmarn_with_newline
+            .1
+            .replace("\r", "")
+            .replace("\n", " ");
+        if flensburg_to_fehmarn.ends_with(" ") {
+            flensburg_to_fehmarn = flensburg_to_fehmarn.trim().to_string();
+        }
+
+        let east_of_fehmarn_to_ruegen_with_newline =
+            Self::get_oestlich_fehmarn_to_ruegen(flensburg_to_fehmarn_with_newline.0).unwrap();
+        let mut oestlich_fehmarn_to_ruegen = east_of_fehmarn_to_ruegen_with_newline
+            .1
+            .replace("\r", "")
+            .replace("\n", " ");
+        if oestlich_fehmarn_to_ruegen.ends_with(" ") {
+            oestlich_fehmarn_to_ruegen = oestlich_fehmarn_to_ruegen.trim().to_string();
+        }
+
+        let east_from_ruegen =
+            Self::get_oestlich_ruegen(east_of_fehmarn_to_ruegen_with_newline.0).unwrap();
+        let mut oestlich_ruegen = east_from_ruegen.1.replace("\r", "").replace("\n", " ");
+        if oestlich_ruegen.ends_with(" ") {
+            oestlich_ruegen = oestlich_ruegen.trim().to_string();
+        }
+
+        Self {
+            number,
+            title,
+            flensburg_to_fehmarn,
+            // TODO: rename and use shorthand notation
+            east_of_fehmarn_to_ruegen: oestlich_fehmarn_to_ruegen,
+            east_from_ruegen: oestlich_ruegen,
         }
     }
 }
@@ -177,6 +290,7 @@ mod tests {
         let content = read_to_string(filename).unwrap();
 
         let high_wind_warning_north_sea_coast = HighWindWarningGermanNorthSeaCoast::parse(&content);
+        // TODO: remove debug print
         dbg!(&high_wind_warning_north_sea_coast);
 
         let mut test_output = HighWindWarningGermanNorthSeaCoast::new();
@@ -198,5 +312,30 @@ mod tests {
             .to_string();
 
         assert_eq!(high_wind_warning_north_sea_coast, test_output);
+    }
+
+    #[test]
+    fn high_wind_warning_german_baltic_coast() {
+        let filename = "./src/test-output/high-wind-warning-german-baltic-coast.txt";
+        let content = read_to_string(filename).unwrap();
+
+        let high_wind_warning_german_baltic_coast =
+            HighWindWarningGermanBalticCoast::parse(&content);
+
+        let mut test_output = HighWindWarningGermanBalticCoast::new();
+
+        test_output.number = "NR. 411".to_string();
+        test_output.title = "Amtliche STARKWIND-Warnung des Seewetterdienstes Hamburg fuer die deutsche Ostseekueste herausgegeben am Mittwoch, den 04.10.2023 um 08:30 Uhr GZ"
+            .to_string();
+        test_output.flensburg_to_fehmarn =
+            "Flensburg bis Fehmarn: West bis Suedwest 5 bis 6, dabei Boeen von 8 Beaufort."
+                .to_string();
+        test_output.east_of_fehmarn_to_ruegen =
+            "oestlich Fehmarn bis Ruegen: West bis Suedwest 5 bis 6, dabei Boeen von 8 Beaufort."
+                .to_string();
+        test_output.east_from_ruegen =
+            "oestlich Ruegen: West bis Suedwest 5 bis 6, dabei Boeen von 8 Beaufort".to_string();
+
+        assert_eq!(high_wind_warning_german_baltic_coast, test_output);
     }
 }
