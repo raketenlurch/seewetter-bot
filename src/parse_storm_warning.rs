@@ -89,64 +89,6 @@ impl HighWindWarningGermanNorthSeaCoast {
         take_until(".")(text)
     }
 
-    /*pub fn parse(filename: &str) -> Self {
-        let number = Self::get_number(filename).unwrap();
-        let title = Self::get_title(number.0).unwrap();
-        let east_frisian_coast = Self::get_east_frisian_coast(title.0).unwrap();
-        let elbe_estuary = Self::get_elbe_estuary(east_frisian_coast.0).unwrap();
-        let sea_area_helgoland = Self::get_sea_area_helgoland(elbe_estuary.0).unwrap();
-        let north_frisian_coast = Self::get_north_frisian_coast(sea_area_helgoland.0).unwrap();
-        let elbe_from_hamburg_to_cuxhaven =
-            Self::get_elbe_from_hamburg_to_cuxhaven(north_frisian_coast.1).unwrap();
-
-        Self {
-            number: number.1.to_string(),
-            title: title.1.to_string(),
-            east_frisian_coast: east_frisian_coast.1.to_string(),
-            elbe_estuary: elbe_estuary.1.to_string(),
-            sea_area_helgoland: sea_area_helgoland.1.to_string(),
-            north_frisian_coast: north_frisian_coast.1.to_string(),
-            elbe_from_hamburg_to_cuxhaven: elbe_from_hamburg_to_cuxhaven.1.to_string(),
-        }
-    }*/
-
-    /*pub fn parse(filename: &str) -> Self {
-        let number_with_newline = Self::get_number(filename).unwrap();
-        let number = number_with_newline.0.replace("\n", " ");
-
-        let title_with_newline = Self::get_title(&number).unwrap();
-        let title = title_with_newline.0.replace("\n", " ");
-
-        let east_frisian_coast_with_newline = Self::get_east_frisian_coast(&title).unwrap();
-        let east_frisian_coast = east_frisian_coast_with_newline.0.replace("\n", " ");
-
-        let elbe_estuary_with_newline = Self::get_elbe_estuary(&east_frisian_coast).unwrap();
-        let elbe_estuary = elbe_estuary_with_newline.0.replace("\n", " ");
-
-        let sea_area_helgoland_with_newline = Self::get_sea_area_helgoland(&elbe_estuary).unwrap();
-        let sea_area_helgoland = sea_area_helgoland_with_newline.0.replace("\n", " ");
-
-        let north_frisian_coast_with_newline =
-            Self::get_north_frisian_coast(&sea_area_helgoland).unwrap();
-        let north_frisian_coast = north_frisian_coast_with_newline.0.replace("\n", " ");
-
-        let elbe_from_hamburg_to_cuxhaven_with_newline =
-            Self::get_elbe_from_hamburg_to_cuxhaven(&north_frisian_coast).unwrap();
-        let elbe_from_hamburg_to_cuxhaven = elbe_from_hamburg_to_cuxhaven_with_newline
-            .0
-            .replace("\n", " ");
-
-        Self {
-            number,
-            title,
-            east_frisian_coast,
-            elbe_estuary,
-            sea_area_helgoland,
-            north_frisian_coast,
-            elbe_from_hamburg_to_cuxhaven,
-        }
-    }*/
-
     fn parse(filename: &str) -> Self {
         let number_with_newline = Self::get_number(filename).unwrap();
         let mut number = number_with_newline.1.replace("\n", " ");
