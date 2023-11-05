@@ -46,7 +46,24 @@ impl StormWarning {}
 
 impl English {}
 
-impl German {}
+impl German {
+    fn new() -> Self {
+        Self {
+            north_sea_coast: HighWindWarningGermanNorthSeaCoast::new(),
+            baltic_coast: HighWindWarningGermanBalticCoast::new(),
+        }
+    }
+
+    fn parse(
+        north_sea_coast: HighWindWarningGermanNorthSeaCoast,
+        baltic_coast: HighWindWarningGermanBalticCoast,
+    ) -> Self {
+        Self {
+            north_sea_coast,
+            baltic_coast,
+        }
+    }
+}
 
 impl HighWindWarningGermanNorthSeaCoast {
     pub fn new() -> Self {
@@ -182,51 +199,6 @@ impl HighWindWarningGermanBalticCoast {
         take_until(".")(text)
     }
 
-    /*fn parse(filename: &str) -> Self {
-        let number_with_newline = Self::get_number(filename).unwrap();
-        let mut number = number_with_newline.1.replace("\n", " ");
-        if number.ends_with(" ") {
-            number = number.trim().to_string();
-        }
-
-        let title_with_newline = Self::get_title(number_with_newline.0).unwrap();
-        let mut title = title_with_newline.1.replace("\n", " ");
-        if title.ends_with(" ") {
-            title = title.trim().to_string();
-        }
-
-        let flensburg_to_fehmarn_with_newline =
-            Self::get_flensburg_to_fehmarn(title_with_newline.0).unwrap();
-        let mut flensburg_to_fehmarn = flensburg_to_fehmarn_with_newline.1.replace("\n", " ");
-        if flensburg_to_fehmarn.ends_with(" ") {
-            flensburg_to_fehmarn = flensburg_to_fehmarn.trim().to_string();
-        }
-
-        let east_of_fehmarn_to_ruegen_with_newline =
-            Self::get_oestlich_fehmarn_to_ruegen(flensburg_to_fehmarn_with_newline.0).unwrap();
-        let mut oestlich_fehmarn_to_ruegen =
-            east_of_fehmarn_to_ruegen_with_newline.1.replace("\n", " ");
-        if oestlich_fehmarn_to_ruegen.ends_with(" ") {
-            oestlich_fehmarn_to_ruegen = oestlich_fehmarn_to_ruegen.trim().to_string();
-        }
-
-        let east_from_ruegen =
-            Self::get_oestlich_ruegen(east_of_fehmarn_to_ruegen_with_newline.0).unwrap();
-        let mut oestlich_ruegen = east_of_fehmarn_to_ruegen_with_newline.1.replace("\n", " ");
-        if oestlich_ruegen.ends_with(" ") {
-            oestlich_ruegen = oestlich_ruegen.trim().to_string();
-        }
-
-        Self {
-            number,
-            title,
-            flensburg_to_fehmarn,
-            // TODO: rename and use shorthand notation
-            east_of_fehmarn_to_ruegen: oestlich_fehmarn_to_ruegen,
-            east_from_ruegen: oestlich_ruegen,
-        }
-    }*/
-
     fn parse(filename: &str) -> Self {
         let number_with_newline = Self::get_number(filename).unwrap();
         let mut number = number_with_newline.1.replace("\r", "").replace("\n", " ");
@@ -293,25 +265,29 @@ mod tests {
         // TODO: remove debug print
         dbg!(&high_wind_warning_north_sea_coast);
 
-        let mut test_output = HighWindWarningGermanNorthSeaCoast::new();
-        test_output.number = "NR. 437".to_string();
-        test_output.title = "Amtliche STARKWIND-Warnung des Seewetterdienstes Hamburg fuer die deutsche Nordseekueste herausgegeben am Mittwoch, den 04.10.2023 um 08:30 Uhr GZ"
+        let mut test_output_german_north_sea_coast = HighWindWarningGermanNorthSeaCoast::new();
+
+        test_output_german_north_sea_coast.number = "NR. 437".to_string();
+        test_output_german_north_sea_coast.title = "Amtliche STARKWIND-Warnung des Seewetterdienstes Hamburg fuer die deutsche Nordseekueste herausgegeben am Mittwoch, den 04.10.2023 um 08:30 Uhr GZ"
             .to_string();
-        test_output.east_frisian_coast =
+        test_output_german_north_sea_coast.east_frisian_coast =
             "Ostfriesische Kueste:  Suedwest bis West 6 bis 7, dabei Boeen von 9 Beaufort."
                 .to_string();
-        test_output.elbe_estuary =
+        test_output_german_north_sea_coast.elbe_estuary =
             "Elbmuendung:  Suedwest bis West 6 bis 7, dabei Boeen von 9 Beaufort.".to_string();
-        test_output.sea_area_helgoland =
+        test_output_german_north_sea_coast.sea_area_helgoland =
             "Seegebiet Helgoland:  Suedwest bis West 6 bis 7, dabei Boeen von 9 Beaufort."
                 .to_string();
-        test_output.north_frisian_coast =
+        test_output_german_north_sea_coast.north_frisian_coast =
             "Nordfriesische Kueste:  Suedwest bis West 6 bis 7, dabei Boeen von 9 Beaufort."
                 .to_string();
-        test_output.elbe_from_hamburg_to_cuxhaven = "Elbe von Hamburg bis Cuxhaven:  Westteil Suedwest bis West 5 bis 6, dabei Boeen von 8 Beaufort"
+        test_output_german_north_sea_coast.elbe_from_hamburg_to_cuxhaven = "Elbe von Hamburg bis Cuxhaven:  Westteil Suedwest bis West 5 bis 6, dabei Boeen von 8 Beaufort"
             .to_string();
 
-        assert_eq!(high_wind_warning_north_sea_coast, test_output);
+        assert_eq!(
+            high_wind_warning_north_sea_coast,
+            test_output_german_north_sea_coast
+        );
     }
 
     #[test]
@@ -322,20 +298,82 @@ mod tests {
         let high_wind_warning_german_baltic_coast =
             HighWindWarningGermanBalticCoast::parse(&content);
 
-        let mut test_output = HighWindWarningGermanBalticCoast::new();
+        let mut test_output_german_baltic_coast = HighWindWarningGermanBalticCoast::new();
 
-        test_output.number = "NR. 411".to_string();
-        test_output.title = "Amtliche STARKWIND-Warnung des Seewetterdienstes Hamburg fuer die deutsche Ostseekueste herausgegeben am Mittwoch, den 04.10.2023 um 08:30 Uhr GZ"
+        test_output_german_baltic_coast.number = "NR. 411".to_string();
+        test_output_german_baltic_coast.title = "Amtliche STARKWIND-Warnung des Seewetterdienstes Hamburg fuer die deutsche Ostseekueste herausgegeben am Mittwoch, den 04.10.2023 um 08:30 Uhr GZ"
             .to_string();
-        test_output.flensburg_to_fehmarn =
+        test_output_german_baltic_coast.flensburg_to_fehmarn =
             "Flensburg bis Fehmarn: West bis Suedwest 5 bis 6, dabei Boeen von 8 Beaufort."
                 .to_string();
-        test_output.east_of_fehmarn_to_ruegen =
+        test_output_german_baltic_coast.east_of_fehmarn_to_ruegen =
             "oestlich Fehmarn bis Ruegen: West bis Suedwest 5 bis 6, dabei Boeen von 8 Beaufort."
                 .to_string();
-        test_output.east_from_ruegen =
+        test_output_german_baltic_coast.east_from_ruegen =
             "oestlich Ruegen: West bis Suedwest 5 bis 6, dabei Boeen von 8 Beaufort".to_string();
 
-        assert_eq!(high_wind_warning_german_baltic_coast, test_output);
+        assert_eq!(
+            high_wind_warning_german_baltic_coast,
+            test_output_german_baltic_coast
+        );
+    }
+
+    #[test]
+    fn test_parse_german() {
+        let filename_high_wind_warning_german_north_sea_coast =
+            "./src/test-output/high-wind-warning-german-north-sea-coast.txt";
+        let filename_high_wind_warning_german_baltic_coast =
+            "./src/test-output/high-wind-warning-german-baltic-coast.txt";
+
+        let content_high_wind_warning_german_north_sea_coast =
+            read_to_string(filename_high_wind_warning_german_north_sea_coast).unwrap();
+        let content_high_wind_warning_german_baltic_coast =
+            read_to_string(filename_high_wind_warning_german_baltic_coast).unwrap();
+
+        let high_wind_warning_german_north_sea_coast = HighWindWarningGermanNorthSeaCoast::parse(
+            &content_high_wind_warning_german_north_sea_coast,
+        );
+        let high_wind_warning_german_baltic_coast =
+            HighWindWarningGermanBalticCoast::parse(&content_high_wind_warning_german_baltic_coast);
+
+        let german = German::parse(
+            high_wind_warning_german_north_sea_coast,
+            high_wind_warning_german_baltic_coast,
+        );
+
+        let mut test_output_german = German::new();
+        let mut test_output_german_north_sea_coast = HighWindWarningGermanNorthSeaCoast::new();
+        let mut test_output_german_baltic_coast = HighWindWarningGermanBalticCoast::new();
+
+        test_output_german_north_sea_coast.number = "NR. 437".to_string();
+        test_output_german_north_sea_coast.title = "Amtliche STARKWIND-Warnung des Seewetterdienstes Hamburg fuer die deutsche Nordseekueste herausgegeben am Mittwoch, den 04.10.2023 um 08:30 Uhr GZ".to_string();
+        test_output_german_north_sea_coast.east_frisian_coast =
+            "Ostfriesische Kueste:  Suedwest bis West 6 bis 7, dabei Boeen von 9 Beaufort."
+                .to_string();
+        test_output_german_north_sea_coast.elbe_estuary =
+            "Elbmuendung:  Suedwest bis West 6 bis 7, dabei Boeen von 9 Beaufort.".to_string();
+        test_output_german_north_sea_coast.sea_area_helgoland =
+            "Seegebiet Helgoland:  Suedwest bis West 6 bis 7, dabei Boeen von 9 Beaufort."
+                .to_string();
+        test_output_german_north_sea_coast.north_frisian_coast =
+            "Nordfriesische Kueste:  Suedwest bis West 6 bis 7, dabei Boeen von 9 Beaufort."
+                .to_string();
+        test_output_german_north_sea_coast.elbe_from_hamburg_to_cuxhaven = "Elbe von Hamburg bis Cuxhaven:  Westteil Suedwest bis West 5 bis 6, dabei Boeen von 8 Beaufort".to_string();
+
+        test_output_german_baltic_coast.number = "NR. 411".to_string();
+        test_output_german_baltic_coast.title = "Amtliche STARKWIND-Warnung des Seewetterdienstes Hamburg fuer die deutsche Ostseekueste herausgegeben am Mittwoch, den 04.10.2023 um 08:30 Uhr GZ".to_string();
+        test_output_german_baltic_coast.flensburg_to_fehmarn =
+            "Flensburg bis Fehmarn: West bis Suedwest 5 bis 6, dabei Boeen von 8 Beaufort."
+                .to_string();
+        test_output_german_baltic_coast.east_of_fehmarn_to_ruegen =
+            "oestlich Fehmarn bis Ruegen: West bis Suedwest 5 bis 6, dabei Boeen von 8 Beaufort."
+                .to_string();
+        test_output_german_baltic_coast.east_from_ruegen =
+            "oestlich Ruegen: West bis Suedwest 5 bis 6, dabei Boeen von 8 Beaufort".to_string();
+
+        test_output_german.north_sea_coast = test_output_german_north_sea_coast;
+        test_output_german.baltic_coast = test_output_german_baltic_coast;
+
+        assert_eq!(german, test_output_german);
     }
 }
