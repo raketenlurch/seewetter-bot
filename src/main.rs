@@ -5,7 +5,7 @@ use crate::content::get_content;
 
 mod content;
 mod parse_storm_warning;
-mod split_file;
+mod utils;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
