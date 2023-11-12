@@ -199,7 +199,7 @@ impl HighWindWarningGermanBalticCoast {
         take_until(".")(text)
     }
 
-    fn parse(filename: &str) -> Self {
+    /*fn parse(filename: &str) -> Self {
         let number_with_newline = Self::get_number(filename).unwrap();
         let mut number = number_with_newline.1.replace("\r", "").replace("\n", " ");
         if number.ends_with(" ") {
@@ -247,6 +247,58 @@ impl HighWindWarningGermanBalticCoast {
             east_of_fehmarn_to_ruegen: oestlich_fehmarn_to_ruegen,
             east_from_ruegen: oestlich_ruegen,
         }
+    }*/
+
+    fn parse(filename: &str) -> Self {
+        let number_with_newline = Self::get_number(filename).unwrap();
+        let mut number = number_with_newline.1.replace("\r", "").replace("\n", " ");
+        if number.ends_with(" ") {
+            number = number.trim().to_string();
+        }
+
+        let title_with_newline = Self::get_title(number_with_newline.0).unwrap();
+        let mut title = title_with_newline.1.replace("\r", "").replace("\n", " ");
+        if title.ends_with(" ") {
+            title = title.trim().to_string();
+        }
+
+        let flensburg_to_fehmarn_with_newline =
+            Self::get_flensburg_to_fehmarn(title_with_newline.0).unwrap();
+        let mut flensburg_to_fehmarn = flensburg_to_fehmarn_with_newline
+            .1
+            .replace("\r", "")
+            .replace("\n", " ");
+        if flensburg_to_fehmarn.ends_with(" ") {
+            flensburg_to_fehmarn = flensburg_to_fehmarn.trim().to_string();
+        }
+
+        let east_of_fehmarn_to_ruegen_with_newline =
+            Self::get_oestlich_fehmarn_to_ruegen(flensburg_to_fehmarn_with_newline.0).unwrap();
+        let mut east_of_fehmarn_to_ruegen = east_of_fehmarn_to_ruegen_with_newline
+            .1
+            .replace("\r", "")
+            .replace("\n", " ");
+        if east_of_fehmarn_to_ruegen.ends_with(" ") {
+            east_of_fehmarn_to_ruegen = east_of_fehmarn_to_ruegen.trim().to_string();
+        }
+
+        let east_from_ruegen_with_newline =
+            Self::get_oestlich_ruegen(east_of_fehmarn_to_ruegen_with_newline.0).unwrap();
+        let mut east_from_ruegen = east_from_ruegen_with_newline
+            .1
+            .replace("\r", "")
+            .replace("\n", " ");
+        if east_from_ruegen.ends_with(" ") {
+            east_from_ruegen = east_from_ruegen.trim().to_string();
+        }
+
+        Self {
+            number,
+            title,
+            flensburg_to_fehmarn,
+            east_of_fehmarn_to_ruegen,
+            east_from_ruegen,
+        }
     }
 }
 
@@ -262,8 +314,6 @@ mod tests {
         let content = read_to_string(filename).unwrap();
 
         let high_wind_warning_north_sea_coast = HighWindWarningGermanNorthSeaCoast::parse(&content);
-        // TODO: remove debug print
-        dbg!(&high_wind_warning_north_sea_coast);
 
         let mut test_output_german_north_sea_coast = HighWindWarningGermanNorthSeaCoast::new();
 
