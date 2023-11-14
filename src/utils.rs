@@ -2,33 +2,6 @@ use std::fs::read_to_string;
 
 use anyhow::{Error, Ok, Result};
 
-// TODO: Remove duplicate empty lines before splitting the file into paragraphs
-/*pub fn split_file(filename: &str) -> Result<Vec<Vec<String>>, Error> {
-    let mut paragraphs = Vec::new();
-    let mut paragraph: Vec<String> = Vec::new();
-
-    let content = read_to_string(filename)?;
-
-    for mut line in content.lines() {
-        line = line.trim();
-
-        if line.is_empty() {
-            paragraphs.push(paragraph.clone());
-            paragraph.clear();
-        } else {
-            paragraph.push(line.into());
-        }
-    }
-
-    if paragraph.len() > 0 {
-        paragraphs.push(paragraph.clone());
-    }
-
-    paragraphs.retain(|element| !element.is_empty());
-
-    Ok(paragraphs)
-}*/
-
 pub fn split_file(filename: &str) -> Result<Vec<Vec<String>>, Error> {
     let mut paragraphs = Vec::new();
     let mut paragraph = Vec::new();
