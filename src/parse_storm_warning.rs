@@ -42,9 +42,110 @@ struct HighWindWarningGermanBalticCoast {
     east_from_ruegen: String,
 }
 
-impl StormWarning {}
+impl StormWarning {
+    fn new() -> Self {
+        Self {
+            english: English::new(),
+            german: German::new(),
+            source: String::new(),
+        }
+    }
 
-impl English {}
+    fn parse(english: English, german: German, text: &str) -> Self {
+        Self {
+            english,
+            german,
+            source: text.to_string(),
+        }
+    }
+}
+
+impl English {
+    fn new() -> Self {
+        Self {
+            title: String::new(),
+            german_bight: String::new(),
+            western_baltic: String::new(),
+            southern_baltic: String::new(),
+            coastal_area_warning: String::new(),
+        }
+    }
+
+    fn get_title(text: &str) -> IResult<&str, &str> {
+        take_until("GERMAN BIGHT:")(text)
+    }
+
+    fn get_german_bight(text: &str) -> IResult<&str, &str> {
+        take_until("WESTERN BALTIC:")(text)
+    }
+
+    fn get_western_baltic(text: &str) -> IResult<&str, &str> {
+        take_until("SOUTHERN BALTIC:")(text)
+    }
+
+    fn get_southern_baltic(text: &str) -> IResult<&str, &str> {
+        take_until("COASTAL AREA WARNINGS:")(text)
+    }
+
+    fn get_coastal_area_warning(text: &str) -> IResult<&str, &str> {
+        take_until(".")(text)
+    }
+
+    fn parse(filename: &str) -> Self {
+        let title_with_newline = Self::get_title(filename).unwrap();
+        let mut title = title_with_newline.1.replace("\n", " ").replace("\r", "");
+        if title.ends_with(" ") {
+            title = title.trim().to_string();
+        }
+
+        let german_bight_with_newline = Self::get_german_bight(title_with_newline.0).unwrap();
+        let mut german_bight = german_bight_with_newline
+            .1
+            .replace("\n", " ")
+            .replace("\r", "");
+        if german_bight.ends_with(" ") {
+            german_bight = german_bight.trim().to_string();
+        }
+
+        let western_baltic_with_newline =
+            Self::get_western_baltic(german_bight_with_newline.0).unwrap();
+        let mut western_baltic = western_baltic_with_newline
+            .1
+            .replace("\n", " ")
+            .replace("\r", "");
+        if western_baltic.ends_with(" ") {
+            western_baltic = western_baltic.trim().to_string();
+        }
+
+        let southern_baltic_with_newline =
+            Self::get_southern_baltic(western_baltic_with_newline.0).unwrap();
+        let mut southern_baltic = southern_baltic_with_newline
+            .1
+            .replace("\n", " ")
+            .replace("\r", "");
+        if southern_baltic.ends_with(" ") {
+            southern_baltic = southern_baltic.trim().to_string();
+        }
+
+        let coastal_area_warning_with_newline =
+            Self::get_coastal_area_warning(southern_baltic_with_newline.0).unwrap();
+        let mut coastal_area_warning = coastal_area_warning_with_newline
+            .1
+            .replace("\n", " ")
+            .replace("\r", "");
+        if coastal_area_warning.ends_with(" ") {
+            coastal_area_warning = coastal_area_warning.trim().to_string();
+        }
+
+        Self {
+            title,
+            german_bight,
+            western_baltic,
+            southern_baltic,
+            coastal_area_warning,
+        }
+    }
+}
 
 impl German {
     fn new() -> Self {
@@ -256,6 +357,8 @@ impl HighWindWarningGermanBalticCoast {
 mod tests {
     use std::fs::read_to_string;
 
+    use crate::utils::split_file;
+
     use super::*;
 
     #[test]
@@ -375,5 +478,30 @@ mod tests {
         test_output_german.baltic_coast = test_output_german_baltic_coast;
 
         assert_eq!(german, test_output_german);
+    }
+
+    #[test]
+    fn test_parse_english() {
+        let filename = "./src/test-output/english.txt";
+        let content = read_to_string(filename).unwrap();
+
+        let english = English::parse(&content);
+
+        let mut test_output_english = English::new();
+        test_output_english.title = "STRONG WIND, GALE AND STORM WARNINGS FOR SEA AREAS: GERMAN BIGHT, WESTERN AND SOUTHERN BALTIC."
+            .to_string();
+        test_output_english.german_bight = "GERMAN BIGHT: no warning.".to_string();
+        test_output_english.western_baltic = "WESTERN BALTIC: no warning.".to_string();
+        test_output_english.southern_baltic = "SOUTHERN BALTIC: W 7 soon.".to_string();
+        test_output_english.coastal_area_warning =
+            "COASTAL AREA WARNINGS: STARKWIND-, STURM- UND ORKANWARNUNGEN FUER DEUTSCHE KUESTEN"
+                .to_string();
+
+        assert_eq!(test_output_english, english);
+    }
+
+    #[test]
+    fn test_storm_warning() {
+        let filename = "./src/test-output/storm-warning.txt";
     }
 }

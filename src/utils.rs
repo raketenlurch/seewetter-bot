@@ -15,7 +15,7 @@ pub fn split_file(filename: &str) -> Result<Vec<Vec<String>>, Error> {
             paragraphs.push(paragraph.clone());
             paragraph.clear();
         } else {
-            paragraph.push(line.into())
+            paragraph.push(line.into());
         }
     }
 
@@ -26,6 +26,68 @@ pub fn split_file(filename: &str) -> Result<Vec<Vec<String>>, Error> {
     paragraphs.retain(|element| !element.is_empty());
 
     Ok(paragraphs)
+}
+
+/*fn move_title_to_next_vector(
+    paragraphs: &mut Vec<Vec<String>>,
+) -> Result<&mut Vec<Vec<String>>, Error> {
+    let mut temp = String::new();
+    // let last_element = paragraphs.len() - 1;
+
+    for (index, vector) in paragraphs.iter_mut().enumerate() {
+        let last_element = vector.len() - 1;
+
+        if vector[last_element].ends_with(":") {
+            temp = vector[last_element].clone();
+            vector.remove(last_element);
+            let mut next_vector = &mut paragraphs[index + 1];
+            next_vector.insert(0, temp);
+        }
+    }
+
+    Ok(paragraphs)
+}*/
+
+/*fn move_title_to_next_vector(mut paragraphs: Vec<Vec<String>>) -> Result<Vec<Vec<String>>, Error> {
+    let mut temp = String::new();
+
+    for (index, vector) in paragraphs.iter_mut().enumerate() {
+        let last_element = vector.len() - 1;
+
+        if vector[last_element].ends_with(":") {
+            temp = vector[last_element].clone();
+            vector.remove(last_element);
+            //let mut next_vector = &mut paragraphs[index + 1];
+            let mut next_vector = paragraphs[index + 1].clone();
+            next_vector.insert(0, temp);
+        }
+    }
+
+    Ok(paragraphs)
+}*/
+
+fn move_title_to_next_vector(mut paragraphs: Vec<Vec<String>>) -> Result<Vec<Vec<String>>, Error> {
+    // temporärer String zum Zwischenspeichern
+    let mut temp = String::new();
+    // Inhalt des 'paragraphs' Vector geklont in einer neuen Variablen
+    let mut cloned = paragraphs.clone();
+
+    // über den Inhalt des 'paragraphs' Vector iterieren.
+    // index = Nummer des aktuellen Vectors
+    // vector = Inhalt des aktuellen Vectors
+    for (index, vector) in paragraphs.iter_mut().enumerate() {
+        // Index des letzten Element des Vectors 'vector'
+        let last_element = vector.len() - 1;
+
+        if vector[last_element].ends_with(":") {
+            temp = vector[last_element].clone();
+            vector.remove(last_element);
+            let mut next_vector = cloned[index + 1].clone();
+            next_vector.insert(0, temp);
+        }
+    }
+
+    Ok(cloned)
 }
 
 #[cfg(test)]
